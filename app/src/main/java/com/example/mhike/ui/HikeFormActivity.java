@@ -29,6 +29,10 @@ public class HikeFormActivity extends AppCompatActivity {
     private TextView tvDifficultyValue;
     private HikeDao hikeDao;
 
+    private String mode = "add";
+    private long editId = 0;
+    private Hike existing; // when editing
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,6 +54,30 @@ public class HikeFormActivity extends AppCompatActivity {
         sliderDifficulty = findViewById(R.id.sliderDifficulty);
         tvDifficultyValue = findViewById(R.id.tvDifficultyValue);
 
+        // Mode detection
+        mode = getIntent().getStringExtra("mode");
+        if (mode == null) mode = "add";
+        if ("edit".equals(mode)) {
+            editId = getIntent().getLongExtra("id", 0);
+            if (editId != 0) {
+                existing = hikeDao.findById(editId);
+            }
+        }
+
+        if (existing != null) {
+            getSupportActionBar().setTitle("Edit Hike");
+            etName.setText(existing.name);
+            etLocation.setText(existing.location);
+            etDate.setText(existing.date);
+            etLength.setText(String.valueOf(existing.lengthKm));
+            etDesc.setText(existing.description);
+            swParking.setChecked(existing.parking);
+            sliderDifficulty.setValue(existing.difficulty);
+        } else {
+            getSupportActionBar().setTitle(getString(R.string.add_hike));
+            // default slider value already set in XML; fine
+        }
+
         tvDifficultyValue.setText("Selected: " + getDifficultyLabel((int) sliderDifficulty.getValue()));
         sliderDifficulty.addOnChangeListener((s, value, fromUser) ->
                 tvDifficultyValue.setText("Selected: " + getDifficultyLabel((int) value)));
@@ -69,7 +97,6 @@ public class HikeFormActivity extends AppCompatActivity {
         boolean parking = swParking.isChecked();
         int difficulty = (int) sliderDifficulty.getValue();
 
-        // Basic validation
         if (TextUtils.isEmpty(name)) {
             etName.setError("Required");
             etName.requestFocus();
@@ -101,6 +128,7 @@ public class HikeFormActivity extends AppCompatActivity {
         }
 
         final Hike pending = new Hike(name, location, date, parking, lengthKm, difficulty, desc);
+        final boolean isEdit = "edit".equals(mode) && existing != null;
 
         String preview = "Name: " + pending.name + "\n"
                 + "Location: " + pending.location + "\n"
@@ -111,16 +139,27 @@ public class HikeFormActivity extends AppCompatActivity {
                 + "Description: " + (TextUtils.isEmpty(pending.description) ? "(none)" : pending.description);
 
         new MaterialAlertDialogBuilder(this)
-                .setTitle(getString(R.string.confirm))
+                .setTitle(isEdit ? "Save changes?" : getString(R.string.confirm))
                 .setMessage(preview)
                 .setNegativeButton(R.string.cancel, (d, w) -> d.dismiss())
-                .setPositiveButton(R.string.confirm, (d, w) -> {
-                    long id = hikeDao.insert(pending);
-                    if (id > 0) {
-                        Toast.makeText(this, "Saved", Toast.LENGTH_SHORT).show();
-                        finish(); // return to list → onResume() reloads
+                .setPositiveButton(isEdit ? "Update" : getString(R.string.confirm), (d, w) -> {
+                    if (isEdit) {
+                        pending.id = existing.id;
+                        int rows = hikeDao.update(pending);
+                        if (rows > 0) {
+                            Toast.makeText(this, "Updated", Toast.LENGTH_SHORT).show();
+                            finish();
+                        } else {
+                            Toast.makeText(this, "Update failed", Toast.LENGTH_SHORT).show();
+                        }
                     } else {
-                        Toast.makeText(this, "Save failed", Toast.LENGTH_SHORT).show();
+                        long id = hikeDao.insert(pending);
+                        if (id > 0) {
+                            Toast.makeText(this, "Saved", Toast.LENGTH_SHORT).show();
+                            finish();
+                        } else {
+                            Toast.makeText(this, "Save failed", Toast.LENGTH_SHORT).show();
+                        }
                     }
                 })
                 .show();
