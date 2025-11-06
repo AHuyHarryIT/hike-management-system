@@ -19,6 +19,12 @@
             android:name=".ui.HikeDetailActivity"
             android:exported="false" />
         <activity
+            android:name=".ui.ObservationListActivity"
+            android:parentActivityName=".ui.HikeDetailActivity" />
+        <activity
+            android:name=".ui.ObservationFormActivity"
+            android:parentActivityName=".ui.ObservationListActivity" />
+        <activity
             android:name=".ui.MainActivity"
             android:exported="true">
             <intent-filter>

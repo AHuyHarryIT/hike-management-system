@@ -107,6 +107,11 @@ public class HikeDetailActivity extends AppCompatActivity {
         } else if (id == R.id.action_delete) {
             confirmDelete();
             return true;
+        } else if (id == R.id.action_observations) {
+            Intent i = new Intent(this, ObservationListActivity.class);
+            i.putExtra("hike_id", hikeId);
+            startActivity(i);
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }

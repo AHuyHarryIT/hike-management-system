@@ -13,4 +13,11 @@
     <string name="confirm">Confirm</string>
     <string name="cancel">Cancel</string>
     <string name="search_hint">Search hikes…</string>
+    <string name="observations">Observations</string>
+    <string name="add_observation">Add Observation</string>
+    <string name="observation">Observation</string>
+    <string name="comments">Comments (optional)</string>
+    <string name="delete">Delete</string>
+    <string name="delete_observation">Delete observation</string>
+    <string name="delete_confirm_msg">Are you sure you want to delete this observation?</string>
 </resources>
