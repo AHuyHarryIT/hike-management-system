@@ -111,7 +111,7 @@ public class HikeDetailActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_detail, menu); // contains action_edit, action_delete, action_observations
+        getMenuInflater().inflate(R.menu.menu_detail, menu);
         return true;
     }
 
@@ -145,7 +145,7 @@ public class HikeDetailActivity extends AppCompatActivity {
                     int rows = hikeDao.delete(hikeId);
                     if (rows > 0) {
                         Toast.makeText(this, "Deleted", Toast.LENGTH_SHORT).show();
-                        finish(); // back to list; observations removed via FK cascade
+                        finish();
                     } else {
                         Toast.makeText(this, "Delete failed", Toast.LENGTH_SHORT).show();
                     }

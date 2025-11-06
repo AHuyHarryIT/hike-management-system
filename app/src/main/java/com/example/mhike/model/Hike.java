@@ -2,7 +2,7 @@ package com.example.mhike.model;
 
 public class Hike {
     public long id;
-    public String name, location, date, description, photoUri; // ⬅️
+    public String name, location, date, description, photoUri;
     public boolean parking;
     public double lengthKm;
     public int difficulty;

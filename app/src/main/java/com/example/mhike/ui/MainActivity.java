@@ -79,8 +79,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (lastFilterIntent == null) reload(); // plain load
-        else applyFilters(lastFilterIntent);     // keep filters after returning
+        if (lastFilterIntent == null) reload();
+        else applyFilters(lastFilterIntent);
     }
 
     private void reload() {

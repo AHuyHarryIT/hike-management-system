@@ -105,11 +105,7 @@ public class ObservationListActivity extends AppCompatActivity {
         adapter.submit(new ArrayList<>(obsDao.listByHike(hikeId)));
     }
 
-    // helper to fetch item at adapter position
     private Observation adapterPositionToItem(int position) {
-        // add this method in ObservationAdapter to expose current list or item getter
-        // Example quick getter on adapter:
-        // public Observation getItem(int pos) { return pos>=0 && pos<data.size()? data.get(pos): null; }
         return adapter.getItem(position);
     }
 }

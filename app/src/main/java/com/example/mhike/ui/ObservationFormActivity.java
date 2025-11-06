@@ -68,7 +68,7 @@ public class ObservationFormActivity extends AppCompatActivity {
             }
             etNote.setText(existing.note);
             etComments.setText(existing.comments);
-            nowSec = existing.timeSec; // keep original time on edit
+            nowSec = existing.timeSec;
             tvTimeNow.setText("Time: " + fmt.format(new Date(nowSec * 1000L)));
             getSupportActionBar().setTitle("Edit Observation");
         } else {
@@ -124,7 +124,6 @@ public class ObservationFormActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Show Delete only in edit mode
         if ("edit".equals(mode) && existing != null) {
             getMenuInflater().inflate(R.menu.menu_observation_form, menu);
         }

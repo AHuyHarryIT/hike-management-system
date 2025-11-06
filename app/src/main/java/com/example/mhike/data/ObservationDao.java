@@ -33,7 +33,6 @@ public class ObservationDao {
         ContentValues v = new ContentValues();
         v.put("note", o.note);
         v.put("comments", o.comments);
-        // keep time_sec as the original event time
         return db.update("observations", v, "id=?", new String[]{String.valueOf(o.id)});
     }
 

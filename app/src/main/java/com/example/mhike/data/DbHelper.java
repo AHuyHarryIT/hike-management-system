@@ -17,7 +17,7 @@ public class DbHelper extends SQLiteOpenHelper {
     @Override
     public void onConfigure(SQLiteDatabase db) {
         super.onConfigure(db);
-        db.setForeignKeyConstraintsEnabled(true); // enforce FK
+        db.setForeignKeyConstraintsEnabled(true);
     }
 
     @Override
@@ -40,7 +40,6 @@ public class DbHelper extends SQLiteOpenHelper {
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_hikes_location ON hikes(location);");
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_hikes_date ON hikes(date);");
 
-        // NEW: observations
         createObservations(db);
     }
 
@@ -50,7 +49,7 @@ public class DbHelper extends SQLiteOpenHelper {
                         "  id INTEGER PRIMARY KEY AUTOINCREMENT," +
                         "  hike_id INTEGER NOT NULL," +
                         "  note TEXT NOT NULL," +
-                        "  time_sec INTEGER NOT NULL," +   // epoch seconds
+                        "  time_sec INTEGER NOT NULL," +
                         "  comments TEXT," +
                         "  FOREIGN KEY(hike_id) REFERENCES hikes(id) ON DELETE CASCADE" +
                         ");"

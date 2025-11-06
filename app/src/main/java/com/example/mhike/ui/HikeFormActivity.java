@@ -57,7 +57,6 @@ public class HikeFormActivity extends AppCompatActivity {
                 if (res.getResultCode() == RESULT_OK && res.getData() != null) {
                     Uri uri = res.getData().getData();
                     if (uri != null) {
-                        // ✅ FIXED: only use READ/WRITE flags
                         int takeFlags = res.getData().getFlags()
                                 & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                         if (takeFlags == 0)
@@ -260,7 +259,6 @@ public class HikeFormActivity extends AppCompatActivity {
         i.setType("image/*");
         i.addCategory(Intent.CATEGORY_OPENABLE);
         i.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
-        // allow persistable read permission on result
         i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
         pickImageLauncher.launch(i);
     }
