@@ -19,6 +19,7 @@ public class HikeDao {
         this.helper = new DbHelper(ctx.getApplicationContext());
     }
 
+    // ---------- CREATE ----------
     public long insert(Hike h) {
         SQLiteDatabase db = helper.getWritableDatabase();
         ContentValues v = new ContentValues();
@@ -29,9 +30,11 @@ public class HikeDao {
         v.put("length_km", h.lengthKm);
         v.put("difficulty", h.difficulty);
         v.put("description", h.description);
+        v.put("photo_uri", h.photoUri);
         return db.insertOrThrow("hikes", null, v);
     }
 
+    // ---------- UPDATE ----------
     public int update(Hike h) {
         SQLiteDatabase db = helper.getWritableDatabase();
         ContentValues v = new ContentValues();
@@ -42,14 +45,17 @@ public class HikeDao {
         v.put("length_km", h.lengthKm);
         v.put("difficulty", h.difficulty);
         v.put("description", h.description);
+        v.put("photo_uri", h.photoUri);
         return db.update("hikes", v, "id=?", new String[]{String.valueOf(h.id)});
     }
 
+    // ---------- DELETE ----------
     public int delete(long id) {
         SQLiteDatabase db = helper.getWritableDatabase();
         return db.delete("hikes", "id=?", new String[]{String.valueOf(id)});
     }
 
+    // ---------- GET ALL ----------
     public List<Hike> getAll(String queryLike) {
         SQLiteDatabase db = helper.getReadableDatabase();
         List<String> args = new ArrayList<>();
@@ -63,12 +69,13 @@ public class HikeDao {
 
         Cursor c = db.query(
                 "hikes",
-                new String[]{"id", "name", "location", "date", "parking", "length_km", "difficulty", "description"},
+                new String[]{"id", "name", "location", "date", "parking", "length_km", "difficulty", "description", "photo_uri"},
                 where,
                 args.isEmpty() ? null : args.toArray(new String[0]),
                 null, null,
                 "date DESC, id DESC"
         );
+
         List<Hike> list = new ArrayList<>();
         try {
             while (c.moveToNext()) {
@@ -80,7 +87,8 @@ public class HikeDao {
                 double lengthKm = c.getDouble(5);
                 int difficulty = c.getInt(6);
                 String description = c.getString(7);
-                list.add(new Hike(id, name, location, date, parking, lengthKm, difficulty, description));
+                String photoUri = c.getString(8);
+                list.add(new Hike(id, name, location, date, parking, lengthKm, difficulty, description, photoUri));
             }
         } finally {
             c.close();
@@ -88,16 +96,22 @@ public class HikeDao {
         return list;
     }
 
+    // ---------- FIND BY ID ----------
     public Hike findById(long id) {
         SQLiteDatabase db = helper.getReadableDatabase();
-        Cursor c = db.query("hikes",
-                new String[]{"id", "name", "location", "date", "parking", "length_km", "difficulty", "description"},
-                "id=?", new String[]{String.valueOf(id)}, null, null, null, "1");
+        Cursor c = db.query(
+                "hikes",
+                new String[]{"id", "name", "location", "date", "parking", "length_km", "difficulty", "description", "photo_uri"},
+                "id=?",
+                new String[]{String.valueOf(id)},
+                null, null, null, "1"
+        );
         try {
             if (c.moveToFirst()) {
                 return new Hike(
                         c.getLong(0), c.getString(1), c.getString(2), c.getString(3),
-                        c.getInt(4) == 1, c.getDouble(5), c.getInt(6), c.getString(7)
+                        c.getInt(4) == 1, c.getDouble(5), c.getInt(6),
+                        c.getString(7), c.getString(8)
                 );
             }
             return null;
@@ -106,6 +120,7 @@ public class HikeDao {
         }
     }
 
+    // ---------- ADVANCED FILTER ----------
     public List<Hike> getFiltered(String name, String location,
                                   String dateFrom, String dateTo,
                                   Double lenMin, Double lenMax,
@@ -117,45 +132,45 @@ public class HikeDao {
         List<String> args = new ArrayList<>();
 
         if (name != null && !name.isEmpty()) {
-            where.append(where.length() == 0 ? "" : " AND ").append("name LIKE ?");
+            append(where, "name LIKE ?");
             args.add("%" + name + "%");
         }
         if (location != null && !location.isEmpty()) {
-            where.append(where.length() == 0 ? "" : " AND ").append("location LIKE ?");
+            append(where, "location LIKE ?");
             args.add("%" + location + "%");
         }
         if (dateFrom != null && !dateFrom.isEmpty()) {
-            where.append(where.length() == 0 ? "" : " AND ").append("date >= ?");
+            append(where, "date >= ?");
             args.add(dateFrom);
         }
         if (dateTo != null && !dateTo.isEmpty()) {
-            where.append(where.length() == 0 ? "" : " AND ").append("date <= ?");
+            append(where, "date <= ?");
             args.add(dateTo);
         }
         if (lenMin != null) {
-            where.append(where.length() == 0 ? "" : " AND ").append("length_km >= ?");
+            append(where, "length_km >= ?");
             args.add(String.valueOf(lenMin));
         }
         if (lenMax != null) {
-            where.append(where.length() == 0 ? "" : " AND ").append("length_km <= ?");
+            append(where, "length_km <= ?");
             args.add(String.valueOf(lenMax));
         }
         if (diffMin != null) {
-            where.append(where.length() == 0 ? "" : " AND ").append("difficulty >= ?");
+            append(where, "difficulty >= ?");
             args.add(String.valueOf(diffMin));
         }
         if (diffMax != null) {
-            where.append(where.length() == 0 ? "" : " AND ").append("difficulty <= ?");
+            append(where, "difficulty <= ?");
             args.add(String.valueOf(diffMax));
         }
         if (parking != null) {
-            where.append(where.length() == 0 ? "" : " AND ").append("parking = ?");
+            append(where, "parking = ?");
             args.add(String.valueOf(parking));
         }
 
         Cursor c = db.query(
                 "hikes",
-                new String[]{"id", "name", "location", "date", "parking", "length_km", "difficulty", "description"},
+                new String[]{"id", "name", "location", "date", "parking", "length_km", "difficulty", "description", "photo_uri"},
                 where.length() == 0 ? null : where.toString(),
                 args.isEmpty() ? null : args.toArray(new String[0]),
                 null, null,
@@ -165,14 +180,25 @@ public class HikeDao {
         List<Hike> list = new ArrayList<>();
         try {
             while (c.moveToNext()) {
-                list.add(new Hike(
-                        c.getLong(0), c.getString(1), c.getString(2), c.getString(3),
-                        c.getInt(4) == 1, c.getDouble(5), c.getInt(6), c.getString(7)
-                ));
+                long id = c.getLong(0);
+                String name_ = c.getString(1);
+                String loc_ = c.getString(2);
+                String date_ = c.getString(3);
+                boolean parking_ = c.getInt(4) == 1;
+                double lengthKm = c.getDouble(5);
+                int diff = c.getInt(6);
+                String desc = c.getString(7);
+                String photo = c.getString(8);
+                list.add(new Hike(id, name_, loc_, date_, parking_, lengthKm, diff, desc, photo));
             }
         } finally {
             c.close();
         }
         return list;
+    }
+
+    private void append(StringBuilder sb, String clause) {
+        if (sb.length() > 0) sb.append(" AND ");
+        sb.append(clause);
     }
 }

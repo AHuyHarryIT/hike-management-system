@@ -1,13 +1,20 @@
 package com.example.mhike.ui;
 
 import android.app.DatePickerDialog;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.TextUtils;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 
 import com.example.mhike.R;
 import com.example.mhike.data.HikeDao;
@@ -19,6 +26,7 @@ import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.slider.Slider;
 import com.google.android.material.textfield.TextInputEditText;
 
+import java.io.File;
 import java.util.Calendar;
 
 public class HikeFormActivity extends AppCompatActivity {
@@ -27,11 +35,53 @@ public class HikeFormActivity extends AppCompatActivity {
     private MaterialSwitch swParking;
     private Slider sliderDifficulty;
     private TextView tvDifficultyValue;
-    private HikeDao hikeDao;
+    private ImageView imgCover;
 
+    private HikeDao hikeDao;
     private String mode = "add";
-    private long editId = 0;
-    private Hike existing; // when editing
+    private long editId = 0L;
+    private Hike existing;
+
+    private Uri selectedPhotoUri = null;
+    private Uri cameraOutputUri = null;
+
+    // --- Launchers ---
+    private final ActivityResultLauncher<String> cameraPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
+                if (granted) openCamera();
+                else toast("Camera permission denied");
+            });
+
+    private final ActivityResultLauncher<Intent> pickImageLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), res -> {
+                if (res.getResultCode() == RESULT_OK && res.getData() != null) {
+                    Uri uri = res.getData().getData();
+                    if (uri != null) {
+                        // ✅ FIXED: only use READ/WRITE flags
+                        int takeFlags = res.getData().getFlags()
+                                & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                        if (takeFlags == 0)
+                            takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION;
+
+                        try {
+                            getContentResolver().takePersistableUriPermission(uri, takeFlags);
+                        } catch (SecurityException ignored) {
+                            // Some providers may not allow persistable permissions; safe to ignore
+                        }
+
+                        selectedPhotoUri = uri;
+                        imgCover.setImageURI(uri);
+                    }
+                }
+            });
+
+    private final ActivityResultLauncher<Intent> takePhotoLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), res -> {
+                if (res.getResultCode() == RESULT_OK && cameraOutputUri != null) {
+                    selectedPhotoUri = cameraOutputUri;
+                    imgCover.setImageURI(selectedPhotoUri);
+                }
+            });
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -42,9 +92,10 @@ public class HikeFormActivity extends AppCompatActivity {
 
         MaterialToolbar tb = findViewById(R.id.toolbarForm);
         setSupportActionBar(tb);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        if (getSupportActionBar() != null) getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         tb.setNavigationOnClickListener(v -> onBackPressed());
 
+        // --- Bind UI ---
         etName = findViewById(R.id.etName);
         etLocation = findViewById(R.id.etLocation);
         etDate = findViewById(R.id.etDate);
@@ -53,19 +104,18 @@ public class HikeFormActivity extends AppCompatActivity {
         swParking = findViewById(R.id.swParking);
         sliderDifficulty = findViewById(R.id.sliderDifficulty);
         tvDifficultyValue = findViewById(R.id.tvDifficultyValue);
+        imgCover = findViewById(R.id.imgCover);
 
-        // Mode detection
+        // --- Mode check (add/edit) ---
         mode = getIntent().getStringExtra("mode");
         if (mode == null) mode = "add";
         if ("edit".equals(mode)) {
-            editId = getIntent().getLongExtra("id", 0);
-            if (editId != 0) {
-                existing = hikeDao.findById(editId);
-            }
+            editId = getIntent().getLongExtra("id", 0L);
+            if (editId != 0L) existing = hikeDao.findById(editId);
         }
 
         if (existing != null) {
-            getSupportActionBar().setTitle("Edit Hike");
+            if (getSupportActionBar() != null) getSupportActionBar().setTitle("Edit Hike");
             etName.setText(existing.name);
             etLocation.setText(existing.location);
             etDate.setText(existing.date);
@@ -73,17 +123,29 @@ public class HikeFormActivity extends AppCompatActivity {
             etDesc.setText(existing.description);
             swParking.setChecked(existing.parking);
             sliderDifficulty.setValue(existing.difficulty);
+
+            if (existing.photoUri != null && !existing.photoUri.isEmpty()) {
+                selectedPhotoUri = Uri.parse(existing.photoUri);
+                imgCover.setImageURI(selectedPhotoUri);
+            }
         } else {
-            getSupportActionBar().setTitle(getString(R.string.add_hike));
-            // default slider value already set in XML; fine
+            if (getSupportActionBar() != null)
+                getSupportActionBar().setTitle(getString(R.string.add_hike));
         }
 
+        // --- Difficulty slider ---
         tvDifficultyValue.setText("Selected: " + getDifficultyLabel((int) sliderDifficulty.getValue()));
         sliderDifficulty.addOnChangeListener((s, value, fromUser) ->
                 tvDifficultyValue.setText("Selected: " + getDifficultyLabel((int) value)));
 
+        // --- Date picker ---
         etDate.setOnClickListener(v -> showDatePicker());
 
+        // --- Photo buttons ---
+        findViewById(R.id.btnChoose).setOnClickListener(v -> openGallery());
+        findViewById(R.id.btnCamera).setOnClickListener(v -> ensureCameraThenOpen());
+
+        // --- Save button ---
         MaterialButton btnSave = findViewById(R.id.btnSave);
         btnSave.setOnClickListener(v -> trySave());
     }
@@ -127,7 +189,11 @@ public class HikeFormActivity extends AppCompatActivity {
             return;
         }
 
-        final Hike pending = new Hike(name, location, date, parking, lengthKm, difficulty, desc);
+        final Hike pending = new Hike(
+                name, location, date, parking, lengthKm, difficulty, desc,
+                selectedPhotoUri == null ? null : selectedPhotoUri.toString()
+        );
+
         final boolean isEdit = "edit".equals(mode) && existing != null;
 
         String preview = "Name: " + pending.name + "\n"
@@ -135,7 +201,8 @@ public class HikeFormActivity extends AppCompatActivity {
                 + "Date: " + pending.date + "\n"
                 + "Parking: " + (pending.parking ? "Yes" : "No") + "\n"
                 + "Length: " + pending.lengthKm + " km\n"
-                + "Difficulty: " + getDifficultyLabel(pending.difficulty) + " (D" + pending.difficulty + ")\n"
+                + "Difficulty: " + getDifficultyLabel(pending.difficulty)
+                + " (D" + pending.difficulty + ")\n"
                 + "Description: " + (TextUtils.isEmpty(pending.description) ? "(none)" : pending.description);
 
         new MaterialAlertDialogBuilder(this)
@@ -146,25 +213,18 @@ public class HikeFormActivity extends AppCompatActivity {
                     if (isEdit) {
                         pending.id = existing.id;
                         int rows = hikeDao.update(pending);
-                        if (rows > 0) {
-                            Toast.makeText(this, "Updated", Toast.LENGTH_SHORT).show();
-                            finish();
-                        } else {
-                            Toast.makeText(this, "Update failed", Toast.LENGTH_SHORT).show();
-                        }
+                        Toast.makeText(this, rows > 0 ? "Updated" : "Update failed", Toast.LENGTH_SHORT).show();
+                        if (rows > 0) finish();
                     } else {
                         long id = hikeDao.insert(pending);
-                        if (id > 0) {
-                            Toast.makeText(this, "Saved", Toast.LENGTH_SHORT).show();
-                            finish();
-                        } else {
-                            Toast.makeText(this, "Save failed", Toast.LENGTH_SHORT).show();
-                        }
+                        Toast.makeText(this, id > 0 ? "Saved" : "Save failed", Toast.LENGTH_SHORT).show();
+                        if (id > 0) finish();
                     }
                 })
                 .show();
     }
 
+    // --- Helpers ---
     private String getDifficultyLabel(int diff) {
         switch (diff) {
             case 1:
@@ -193,5 +253,39 @@ public class HikeFormActivity extends AppCompatActivity {
             String val = String.format("%04d-%02d-%02d", year, month + 1, dayOfMonth);
             etDate.setText(val);
         }, y, m, d).show();
+    }
+
+    private void openGallery() {
+        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        i.setType("image/*");
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+        // allow persistable read permission on result
+        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        pickImageLauncher.launch(i);
+    }
+
+    private void ensureCameraThenOpen() {
+        cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA);
+    }
+
+    private void openCamera() {
+        try {
+            File imagesDir = new File(getCacheDir(), "images");
+            if (!imagesDir.exists()) imagesDir.mkdirs();
+            File temp = File.createTempFile("hike_", ".jpg", imagesDir);
+            cameraOutputUri = FileProvider.getUriForFile(
+                    this, getPackageName() + ".fileprovider", temp);
+            Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            i.putExtra(MediaStore.EXTRA_OUTPUT, cameraOutputUri);
+            i.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            takePhotoLauncher.launch(i);
+        } catch (Exception e) {
+            toast("Cannot open camera: " + e.getMessage());
+        }
+    }
+
+    private void toast(String s) {
+        Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
     }
 }

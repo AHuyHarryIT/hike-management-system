@@ -1,4 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-
-</PreferenceScreen>
+<?xml version="1.0" encoding="utf-8"?><!-- res/xml/file_paths.xml -->
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <cache-path
+        name="images"
+        path="images/" />
+    <external-cache-path
+        name="ext_images"
+        path="images/" />
+</paths>

@@ -1,9 +1,11 @@
 package com.example.mhike.ui;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,9 +21,10 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 public class HikeDetailActivity extends AppCompatActivity {
 
     private HikeDao hikeDao;
-    private long hikeId = 0;
+    private long hikeId = 0L;
     private Hike hike; // cached
 
+    private ImageView imgCover;
     private TextView tvName, tvLocation, tvDate, tvMeta, tvDesc;
 
     @Override
@@ -33,20 +36,20 @@ public class HikeDetailActivity extends AppCompatActivity {
 
         MaterialToolbar tb = findViewById(R.id.toolbarDetail);
         setSupportActionBar(tb);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        if (getSupportActionBar() != null) getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         tb.setNavigationOnClickListener(v -> onBackPressed());
 
+        imgCover = findViewById(R.id.imgCoverDetail);
         tvName = findViewById(R.id.tvDName);
         tvLocation = findViewById(R.id.tvDLocation);
         tvDate = findViewById(R.id.tvDDate);
         tvMeta = findViewById(R.id.tvDMeta);
         tvDesc = findViewById(R.id.tvDDesc);
 
-        hikeId = getIntent().getLongExtra("id", 0);
-        if (hikeId == 0) {
+        hikeId = getIntent().getLongExtra("id", 0L);
+        if (hikeId == 0L) {
             Toast.makeText(this, "Invalid hike", Toast.LENGTH_SHORT).show();
             finish();
-            return;
         }
     }
 
@@ -63,13 +66,30 @@ public class HikeDetailActivity extends AppCompatActivity {
             finish();
             return;
         }
+
+        if (getSupportActionBar() != null) getSupportActionBar().setTitle(hike.name);
+
+        // Cover photo
+        if (hike.photoUri != null && !hike.photoUri.isEmpty()) {
+            imgCover.setImageURI(Uri.parse(hike.photoUri));
+        } else {
+            imgCover.setImageResource(android.R.drawable.ic_menu_report_image);
+        }
+
+        // Text fields
         tvName.setText(hike.name);
         tvLocation.setText(hike.location);
         tvDate.setText(hike.date);
+
         String meta = (hike.parking ? "Parking • " : "No parking • ")
                 + hike.lengthKm + " km • " + getDifficultyLabel(hike.difficulty);
         tvMeta.setText(meta);
-        tvDesc.setText(hike.description == null || hike.description.isEmpty() ? "(no description)" : hike.description);
+
+        tvDesc.setText(
+                hike.description == null || hike.description.trim().isEmpty()
+                        ? "(no description)"
+                        : hike.description
+        );
     }
 
     private String getDifficultyLabel(int diff) {
@@ -91,7 +111,7 @@ public class HikeDetailActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_detail, menu);
+        getMenuInflater().inflate(R.menu.menu_detail, menu); // contains action_edit, action_delete, action_observations
         return true;
     }
 
@@ -119,13 +139,13 @@ public class HikeDetailActivity extends AppCompatActivity {
     private void confirmDelete() {
         new MaterialAlertDialogBuilder(this)
                 .setTitle("Delete hike")
-                .setMessage("Are you sure you want to delete this hike?\n\n" + hike.name)
+                .setMessage("Are you sure you want to delete this hike?\n\n" + (hike != null ? hike.name : ""))
                 .setNegativeButton(R.string.cancel, (d, w) -> d.dismiss())
-                .setPositiveButton("Delete", (d, w) -> {
+                .setPositiveButton(R.string.delete, (d, w) -> {
                     int rows = hikeDao.delete(hikeId);
                     if (rows > 0) {
                         Toast.makeText(this, "Deleted", Toast.LENGTH_SHORT).show();
-                        finish(); // back to list
+                        finish(); // back to list; observations removed via FK cascade
                     } else {
                         Toast.makeText(this, "Delete failed", Toast.LENGTH_SHORT).show();
                     }

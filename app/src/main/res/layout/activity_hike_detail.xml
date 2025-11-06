@@ -1,37 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <LinearLayout
-        android:padding="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_width="match_parent" android:layout_height="wrap_content">
+        android:padding="16dp">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbarDetail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:title="@string/hike_list"/>
+            android:title="@string/hike_list" />
 
-        <TextView android:id="@+id/tvDName"
-            android:textStyle="bold" android:textSize="20sp"
-            android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"/>
+        <ImageView
+            android:id="@+id/imgCoverDetail"
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:layout_marginTop="8dp"
+            android:adjustViewBounds="true"
+            android:background="?attr/colorSurfaceVariant"
+            android:contentDescription="@string/add_photo"
+            android:scaleType="centerCrop" />
 
-        <TextView android:id="@+id/tvDLocation"
-            android:layout_marginTop="6dp"
-            android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-
-        <TextView android:id="@+id/tvDDate"
-            android:layout_marginTop="6dp"
-            android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-
-        <TextView android:id="@+id/tvDMeta"
-            android:layout_marginTop="10dp"
-            android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-
-        <TextView android:id="@+id/tvDDesc"
+        <TextView
+            android:id="@+id/tvDName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvDLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp" />
+
+        <TextView
+            android:id="@+id/tvDDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp" />
+
+        <TextView
+            android:id="@+id/tvDMeta"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp" />
+
+        <TextView
+            android:id="@+id/tvDDesc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp" />
     </LinearLayout>
 </ScrollView>

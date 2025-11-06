@@ -8,7 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DbHelper extends SQLiteOpenHelper {
 
     public static final String DB_NAME = "mhike.db";
-    public static final int DB_VERSION = 2;
+    public static final int DB_VERSION = 3;
 
     public DbHelper(Context ctx) {
         super(ctx, DB_NAME, null, DB_VERSION);
@@ -32,6 +32,7 @@ public class DbHelper extends SQLiteOpenHelper {
                         "  length_km REAL NOT NULL," +
                         "  difficulty INTEGER NOT NULL," +
                         "  description TEXT," +
+                        "  photo_uri TEXT," +
                         "  created_at INTEGER DEFAULT (strftime('%s','now'))" +
                         ");"
         );
@@ -62,6 +63,9 @@ public class DbHelper extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         if (oldVersion < 2) {
             createObservations(db);
+        }
+        if (oldVersion < 3) {
+            db.execSQL("ALTER TABLE hikes ADD COLUMN photo_uri TEXT;");
         }
     }
 }

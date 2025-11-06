@@ -34,4 +34,7 @@
     <string name="parking_no">No</string>
     <string name="apply">Apply</string>
     <string name="clear">Clear</string>
+    <string name="add_photo">Add photo</string>
+    <string name="take_photo">Take photo</string>
+    <string name="choose_from_gallery">Choose photo</string>
 </resources>
