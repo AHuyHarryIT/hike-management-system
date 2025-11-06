@@ -25,6 +25,9 @@
             android:name=".ui.ObservationFormActivity"
             android:parentActivityName=".ui.ObservationListActivity" />
         <activity
+            android:name=".ui.SearchActivity"
+            android:parentActivityName=".ui.MainActivity" />
+        <activity
             android:name=".ui.MainActivity"
             android:exported="true">
             <intent-filter>

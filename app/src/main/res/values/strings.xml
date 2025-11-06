@@ -20,4 +20,18 @@
     <string name="delete">Delete</string>
     <string name="delete_observation">Delete observation</string>
     <string name="delete_confirm_msg">Are you sure you want to delete this observation?</string>
+    <string name="advanced_search">Advanced Search</string>
+    <string name="name_optional">Name (optional)</string>
+    <string name="location_optional">Location (optional)</string>
+    <string name="from_date">From date</string>
+    <string name="to_date">To date</string>
+    <string name="min_length_km">Min length (km)</string>
+    <string name="max_length_km">Max length (km)</string>
+    <string name="min_difficulty">Min difficulty (1–5)</string>
+    <string name="max_difficulty">Max difficulty (1–5)</string>
+    <string name="parking_any">Any</string>
+    <string name="parking_yes">Yes</string>
+    <string name="parking_no">No</string>
+    <string name="apply">Apply</string>
+    <string name="clear">Clear</string>
 </resources>

@@ -105,4 +105,74 @@ public class HikeDao {
             c.close();
         }
     }
+
+    public List<Hike> getFiltered(String name, String location,
+                                  String dateFrom, String dateTo,
+                                  Double lenMin, Double lenMax,
+                                  Integer diffMin, Integer diffMax,
+                                  Integer parking /* null=any, 1=yes, 0=no */) {
+        SQLiteDatabase db = helper.getReadableDatabase();
+
+        StringBuilder where = new StringBuilder();
+        List<String> args = new ArrayList<>();
+
+        if (name != null && !name.isEmpty()) {
+            where.append(where.length() == 0 ? "" : " AND ").append("name LIKE ?");
+            args.add("%" + name + "%");
+        }
+        if (location != null && !location.isEmpty()) {
+            where.append(where.length() == 0 ? "" : " AND ").append("location LIKE ?");
+            args.add("%" + location + "%");
+        }
+        if (dateFrom != null && !dateFrom.isEmpty()) {
+            where.append(where.length() == 0 ? "" : " AND ").append("date >= ?");
+            args.add(dateFrom);
+        }
+        if (dateTo != null && !dateTo.isEmpty()) {
+            where.append(where.length() == 0 ? "" : " AND ").append("date <= ?");
+            args.add(dateTo);
+        }
+        if (lenMin != null) {
+            where.append(where.length() == 0 ? "" : " AND ").append("length_km >= ?");
+            args.add(String.valueOf(lenMin));
+        }
+        if (lenMax != null) {
+            where.append(where.length() == 0 ? "" : " AND ").append("length_km <= ?");
+            args.add(String.valueOf(lenMax));
+        }
+        if (diffMin != null) {
+            where.append(where.length() == 0 ? "" : " AND ").append("difficulty >= ?");
+            args.add(String.valueOf(diffMin));
+        }
+        if (diffMax != null) {
+            where.append(where.length() == 0 ? "" : " AND ").append("difficulty <= ?");
+            args.add(String.valueOf(diffMax));
+        }
+        if (parking != null) {
+            where.append(where.length() == 0 ? "" : " AND ").append("parking = ?");
+            args.add(String.valueOf(parking));
+        }
+
+        Cursor c = db.query(
+                "hikes",
+                new String[]{"id", "name", "location", "date", "parking", "length_km", "difficulty", "description"},
+                where.length() == 0 ? null : where.toString(),
+                args.isEmpty() ? null : args.toArray(new String[0]),
+                null, null,
+                "date DESC, id DESC"
+        );
+
+        List<Hike> list = new ArrayList<>();
+        try {
+            while (c.moveToNext()) {
+                list.add(new Hike(
+                        c.getLong(0), c.getString(1), c.getString(2), c.getString(3),
+                        c.getInt(4) == 1, c.getDouble(5), c.getInt(6), c.getString(7)
+                ));
+            }
+        } finally {
+            c.close();
+        }
+        return list;
+    }
 }
