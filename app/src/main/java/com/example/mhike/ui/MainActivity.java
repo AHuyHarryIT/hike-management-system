@@ -27,9 +27,11 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -55,7 +57,6 @@ public class MainActivity extends AppCompatActivity {
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        // Initialize filter section
         filterSection = findViewById(R.id.filterSection);
         cbUseDateRange = findViewById(R.id.cbUseDateRange);
         tilDateFrom = findViewById(R.id.tilDateFrom);
@@ -66,10 +67,8 @@ public class MainActivity extends AppCompatActivity {
         spinnerDiffMin = findViewById(R.id.spinnerDiffMin);
         spinnerDiffMax = findViewById(R.id.spinnerDiffMax);
 
-        // Setup spinners
         setupSpinners();
 
-        // Checkbox to enable/disable date range
         cbUseDateRange.setOnCheckedChangeListener((buttonView, isChecked) -> {
             tilDateFrom.setEnabled(isChecked);
             tilDateTo.setEnabled(isChecked);
@@ -82,7 +81,6 @@ public class MainActivity extends AppCompatActivity {
             applyCurrentFilters();
         });
 
-        // Date pickers
         etFilterDateFrom.setOnClickListener(v -> {
             if (cbUseDateRange.isChecked()) {
                 pickDate(etFilterDateFrom);
@@ -94,11 +92,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Spinner listeners
         AdapterView.OnItemSelectedListener filterListener = new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                applyCurrentFilters();
+                if (view != null) {
+                    applyCurrentFilters();
+                }
             }
 
             @Override
@@ -109,7 +108,6 @@ public class MainActivity extends AppCompatActivity {
         spinnerDiffMin.setOnItemSelectedListener(filterListener);
         spinnerDiffMax.setOnItemSelectedListener(filterListener);
 
-        // Clear filters button
         MaterialButton btnClearFilters = findViewById(R.id.btnClearFilters);
         btnClearFilters.setOnClickListener(v -> clearFilters());
 
@@ -134,14 +132,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupSpinners() {
-        // Parking spinner
         String[] parkingOptions = {"Any", "Yes", "No"};
         ArrayAdapter<String> parkingAdapter = new ArrayAdapter<>(this, 
             android.R.layout.simple_spinner_item, parkingOptions);
         parkingAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerParking.setAdapter(parkingAdapter);
 
-        // Difficulty spinners
         String[] difficultyOptions = {"Any", "1", "2", "3", "4", "5"};
         ArrayAdapter<String> diffMinAdapter = new ArrayAdapter<>(this,
             android.R.layout.simple_spinner_item, difficultyOptions);
@@ -164,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
         int y = c.get(Calendar.YEAR), m = c.get(Calendar.MONTH), d = c.get(Calendar.DAY_OF_MONTH);
         new DatePickerDialog(this, (view, year, month, dayOfMonth) -> {
             target.setText(String.format("%04d-%02d-%02d", year, month + 1, dayOfMonth));
+            applyCurrentFilters();
         }, y, m, d).show();
     }
 
@@ -182,26 +179,23 @@ public class MainActivity extends AppCompatActivity {
         String dateFrom = cbUseDateRange.isChecked() ? safe(etFilterDateFrom) : "";
         String dateTo = cbUseDateRange.isChecked() ? safe(etFilterDateTo) : "";
         
-        // Parse parking
         Integer parking = null;
         int parkingPos = spinnerParking.getSelectedItemPosition();
-        if (parkingPos == 1) parking = 1; // Yes
-        else if (parkingPos == 2) parking = 0; // No
+        if (parkingPos == 1) parking = 1;
+        else if (parkingPos == 2) parking = 0;
 
-        // Parse difficulty
         Integer diffMin = null;
         Integer diffMax = null;
         int diffMinPos = spinnerDiffMin.getSelectedItemPosition();
         int diffMaxPos = spinnerDiffMax.getSelectedItemPosition();
         
-        if (diffMinPos > 0) diffMin = diffMinPos; // 0 is "Any"
+        if (diffMinPos > 0) diffMin = diffMinPos;
         if (diffMaxPos > 0) diffMax = diffMaxPos;
 
-        // Override simple search when using filters
         currentQuery = null;
 
         List<Hike> res = hikeDao.getFiltered(
-                null, null, // name and location removed
+                null, null,
                 nullIfEmpty(dateFrom), nullIfEmpty(dateTo),
                 null, null, diffMin, diffMax, parking
         );
@@ -250,7 +244,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onQueryTextChange(String newText) {
                 currentQuery = newText;
-                // Simple search overrides filters
                 if (isFilterVisible && hasActiveFilters()) {
                     clearFilters();
                 }
@@ -259,7 +252,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // handle filters button click
         MenuItem filters = menu.findItem(R.id.action_filters);
         filters.setOnMenuItemClickListener(item -> {
             toggleFilterSection();
