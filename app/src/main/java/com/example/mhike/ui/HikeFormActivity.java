@@ -92,7 +92,6 @@ public class HikeFormActivity extends AppCompatActivity {
         MaterialToolbar tb = findViewById(R.id.toolbarForm);
         setSupportActionBar(tb);
         if (getSupportActionBar() != null) getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        tb.setNavigationOnClickListener(v -> onBackPressed());
 
         // --- Bind UI ---
         etName = findViewById(R.id.etName);
