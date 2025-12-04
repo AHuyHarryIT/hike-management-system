@@ -19,7 +19,6 @@ public class HikeDao {
         this.helper = new DbHelper(ctx.getApplicationContext());
     }
 
-    // ---------- CREATE ----------
     public long insert(Hike h) {
         SQLiteDatabase db = helper.getWritableDatabase();
         ContentValues v = new ContentValues();
@@ -34,7 +33,6 @@ public class HikeDao {
         return db.insertOrThrow("hikes", null, v);
     }
 
-    // ---------- UPDATE ----------
     public int update(Hike h) {
         SQLiteDatabase db = helper.getWritableDatabase();
         ContentValues v = new ContentValues();
@@ -49,13 +47,11 @@ public class HikeDao {
         return db.update("hikes", v, "id=?", new String[]{String.valueOf(h.id)});
     }
 
-    // ---------- DELETE ----------
     public int delete(long id) {
         SQLiteDatabase db = helper.getWritableDatabase();
         return db.delete("hikes", "id=?", new String[]{String.valueOf(id)});
     }
 
-    // ---------- GET ALL ----------
     public List<Hike> getAll(String queryLike) {
         SQLiteDatabase db = helper.getReadableDatabase();
         List<String> args = new ArrayList<>();
@@ -96,7 +92,6 @@ public class HikeDao {
         return list;
     }
 
-    // ---------- FIND BY ID ----------
     public Hike findById(long id) {
         SQLiteDatabase db = helper.getReadableDatabase();
         Cursor c = db.query(
@@ -120,7 +115,6 @@ public class HikeDao {
         }
     }
 
-    // ---------- ADVANCED FILTER ----------
     public List<Hike> getFiltered(String name, String location,
                                   String dateFrom, String dateTo,
                                   Double lenMin, Double lenMax,

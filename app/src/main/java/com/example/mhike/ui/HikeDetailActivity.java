@@ -22,7 +22,7 @@ public class HikeDetailActivity extends AppCompatActivity {
 
     private HikeDao hikeDao;
     private long hikeId = 0L;
-    private Hike hike; // cached
+    private Hike hike;
 
     private ImageView imgCover;
     private TextView tvName, tvLocation, tvDate, tvMeta, tvDesc;
