@@ -34,9 +34,9 @@ public class ObservationFormActivity extends AppCompatActivity {
     private long hikeId = 0;
     private long editId = 0;
     private Observation existing;
-    private long nowSec;
+    private String nowDateTime;
 
-    private final SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
+    private final SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -68,12 +68,12 @@ public class ObservationFormActivity extends AppCompatActivity {
             }
             etNote.setText(existing.note);
             etComments.setText(existing.comments);
-            nowSec = existing.timeSec;
-            tvTimeNow.setText("Time: " + fmt.format(new Date(nowSec * 1000L)));
+            nowDateTime = existing.datetime;
+            tvTimeNow.setText("Time: " + nowDateTime);
             getSupportActionBar().setTitle("Edit Observation");
         } else {
-            nowSec = System.currentTimeMillis() / 1000L;
-            tvTimeNow.setText("Time: " + fmt.format(new Date(nowSec * 1000L)));
+            nowDateTime = fmt.format(new Date());
+            tvTimeNow.setText("Time: " + nowDateTime);
             getSupportActionBar().setTitle(getString(R.string.add_observation));
         }
 
@@ -93,11 +93,11 @@ public class ObservationFormActivity extends AppCompatActivity {
 
         final boolean isEdit = "edit".equals(mode) && existing != null;
         final Observation pending = isEdit
-                ? new Observation(existing.id, existing.hikeId, note, existing.timeSec, comments)
-                : new Observation(hikeId, note, nowSec, comments);
+                ? new Observation(existing.id, existing.hikeId, note, existing.datetime, comments)
+                : new Observation(hikeId, note, nowDateTime, comments);
 
         String preview = "Note: " + pending.note + "\n"
-                + "Time: " + fmt.format(new Date(pending.timeSec * 1000L)) + "\n"
+                + "Time: " + pending.datetime + "\n"
                 + "Comments: " + (TextUtils.isEmpty(pending.comments) ? "(none)" : pending.comments);
 
         new MaterialAlertDialogBuilder(this)

@@ -23,7 +23,7 @@ public class ObservationDao {
         ContentValues v = new ContentValues();
         v.put("hike_id", o.hikeId);
         v.put("note", o.note);
-        v.put("time_sec", o.timeSec);
+        v.put("datetime", o.datetime);
         v.put("comments", o.comments);
         return db.insertOrThrow("observations", null, v);
     }
@@ -44,12 +44,12 @@ public class ObservationDao {
     public Observation findById(long id) {
         SQLiteDatabase db = helper.getReadableDatabase();
         Cursor c = db.query("observations",
-                new String[]{"id", "hike_id", "note", "time_sec", "comments"},
+                new String[]{"id", "hike_id", "note", "datetime", "comments"},
                 "id=?", new String[]{String.valueOf(id)}, null, null, null, "1");
         try {
             if (c.moveToFirst()) {
                 return new Observation(
-                        c.getLong(0), c.getLong(1), c.getString(2), c.getLong(3), c.getString(4)
+                        c.getLong(0), c.getLong(1), c.getString(2), c.getString(3), c.getString(4)
                 );
             }
             return null;
@@ -61,14 +61,14 @@ public class ObservationDao {
     public List<Observation> listByHike(long hikeId) {
         SQLiteDatabase db = helper.getReadableDatabase();
         Cursor c = db.query("observations",
-                new String[]{"id", "hike_id", "note", "time_sec", "comments"},
+                new String[]{"id", "hike_id", "note", "datetime", "comments"},
                 "hike_id=?", new String[]{String.valueOf(hikeId)},
-                null, null, "time_sec DESC, id DESC");
+                null, null, "datetime DESC, id DESC");
         List<Observation> list = new ArrayList<>();
         try {
             while (c.moveToNext()) {
                 list.add(new Observation(
-                        c.getLong(0), c.getLong(1), c.getString(2), c.getLong(3), c.getString(4)
+                        c.getLong(0), c.getLong(1), c.getString(2), c.getString(3), c.getString(4)
                 ));
             }
         } finally {

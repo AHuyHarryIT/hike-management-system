@@ -12,11 +12,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.mhike.R;
 import com.example.mhike.model.Observation;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 public class ObservationAdapter extends RecyclerView.Adapter<ObservationAdapter.VH> {
 
@@ -26,7 +23,6 @@ public class ObservationAdapter extends RecyclerView.Adapter<ObservationAdapter.
 
     private final List<Observation> data = new ArrayList<>();
     private final OnItemClick onItemClick;
-    private final SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault());
 
     public ObservationAdapter(OnItemClick onItemClick) {
         this.onItemClick = onItemClick;
@@ -49,7 +45,7 @@ public class ObservationAdapter extends RecyclerView.Adapter<ObservationAdapter.
     public void onBindViewHolder(@NonNull VH h, int position) {
         Observation o = data.get(position);
         h.tvNote.setText(o.note);
-        h.tvTime.setText("Time: " + fmt.format(new Date(o.timeSec * 1000L)));
+        h.tvTime.setText("Time: " + o.datetime);
         h.tvComments.setText(o.comments == null || o.comments.isEmpty() ? "(no comments)" : o.comments);
         h.itemView.setOnClickListener(v -> onItemClick.onClick(o));
     }

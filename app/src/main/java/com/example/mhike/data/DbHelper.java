@@ -8,7 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DbHelper extends SQLiteOpenHelper {
 
     public static final String DB_NAME = "mhike.db";
-    public static final int DB_VERSION = 3;
+    public static final int DB_VERSION = 4;
 
     public DbHelper(Context ctx) {
         super(ctx, DB_NAME, null, DB_VERSION);
@@ -49,13 +49,13 @@ public class DbHelper extends SQLiteOpenHelper {
                         "  id INTEGER PRIMARY KEY AUTOINCREMENT," +
                         "  hike_id INTEGER NOT NULL," +
                         "  note TEXT NOT NULL," +
-                        "  time_sec INTEGER NOT NULL," +
+                        "  datetime TEXT NOT NULL," +
                         "  comments TEXT," +
                         "  FOREIGN KEY(hike_id) REFERENCES hikes(id) ON DELETE CASCADE" +
                         ");"
         );
         db.execSQL("CREATE INDEX IF NOT EXISTS idx_obs_hike ON observations(hike_id);");
-        db.execSQL("CREATE INDEX IF NOT EXISTS idx_obs_time ON observations(time_sec);");
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_obs_time ON observations(datetime);");
     }
 
     @Override
@@ -65,6 +65,18 @@ public class DbHelper extends SQLiteOpenHelper {
         }
         if (oldVersion < 3) {
             db.execSQL("ALTER TABLE hikes ADD COLUMN photo_uri TEXT;");
+        }
+        if (oldVersion < 4) {
+            // Migrate time_sec to datetime
+            db.execSQL("ALTER TABLE observations RENAME TO observations_old;");
+            createObservations(db);
+            db.execSQL(
+                    "INSERT INTO observations (id, hike_id, note, datetime, comments) " +
+                            "SELECT id, hike_id, note, " +
+                            "datetime(time_sec, 'unixepoch', 'localtime'), comments " +
+                            "FROM observations_old;"
+            );
+            db.execSQL("DROP TABLE observations_old;");
         }
     }
 }
